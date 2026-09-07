@@ -612,6 +612,22 @@ async function generateQCABPDF(questions) {
 
 
     // ==========================================
+    // QUESTION LISTING FOOTER
+    // ==========================================
+
+    doc.setFontSize(9);
+
+    doc.text(
+        "Made by Dooms Day QCAB Generator - for more info contact cds2gc@gmail.com",
+        105,
+        288,
+        { align: "center" }
+    );
+
+    doc.setFontSize(22);
+
+
+    // ==========================================
     // PART 2: QCAB ANSWER PAGES
     // ==========================================
 

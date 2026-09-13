@@ -591,6 +591,38 @@ button.danger:hover {
 
 }
 
+
+.locked-question {
+    background: #f8f7ff;
+    border-color: #e5e7eb;
+}
+
+.locked-question label {
+    cursor: default;
+}
+
+.locked-question input[type="checkbox"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.locked-preview {
+    color: #4b5563;
+    font-style: italic;
+}
+
+.lock-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: #ede9fe;
+    color: #5b21b6;
+    font-size: 12px;
+    font-weight: 700;
+    font-style: normal;
+}
+
 </style>
 
 </head>
@@ -1205,10 +1237,12 @@ const years = [
 
 function updatePlanMessage(accessLevel) {
 
+    window.currentAccessLevel = accessLevel;
+
     if (accessLevel === "free") {
 
         planMessage.textContent =
-            "Free Plan: You have access to 2026 questions only.";
+            "Free Plan: You have access to 2026 questions only. Upgrade to premium for unlimited access.";
 
         planMessage.style.display = "block";
 
@@ -1217,7 +1251,7 @@ function updatePlanMessage(accessLevel) {
     } else if (accessLevel === "paid") {
 
         planMessage.textContent =
-            "Paid Plan: You have access to questions from all available years.";
+            "Paid Plan:You have access to all available questions.";
 
         planMessage.style.display = "block";
 
@@ -2126,23 +2160,17 @@ function displayQuestions(questions) {
     const generateCard =
         document.getElementById("generateCard");
 
-
     questionsList.innerHTML = "";
-
 
     questions.sort(
         function (a, b) {
-
             return Number(b.year || 0) -
                    Number(a.year || 0);
-
         }
     );
 
-
     const totalQuestionsMessage =
         document.createElement("div");
-
 
     totalQuestionsMessage.style.margin =
         "15px 0";
@@ -2169,24 +2197,19 @@ function displayQuestions(questions) {
         "Total Questions Found: " +
         questions.length;
 
-
     questionsList.appendChild(
         totalQuestionsMessage
     );
-
 
     if (!questions.length) {
 
         questionsList.innerHTML = "";
 
-
         const noQuestionsMessage =
             document.createElement("p");
 
-
         noQuestionsMessage.textContent =
             "No questions found for this selection.";
-
 
         questionsList.appendChild(
             totalQuestionsMessage
@@ -2196,108 +2219,151 @@ function displayQuestions(questions) {
             noQuestionsMessage
         );
 
-
         questionsCard.style.display =
             "block";
 
         generateCard.style.display =
             "none";
 
-
         return;
-
     }
 
+    const accessLevel =
+        window.currentAccessLevel || "free";
+
+    let selectableQuestions = 0;
 
     questions.forEach(
         function (question, index) {
 
+            const is2026 =
+                Number(question.year) === 2026;
+
+            const isPremiumUser =
+                accessLevel === "paid" ||
+                accessLevel === "admin";
+
+            const canSelect =
+                isPremiumUser || is2026;
+
+            if (canSelect) {
+                selectableQuestions++;
+            }
+
             const wrapper =
                 document.createElement("div");
-
 
             wrapper.className =
                 "question";
 
+            if (!canSelect) {
+                wrapper.classList.add(
+                    "locked-question"
+                );
+            }
 
             const label =
                 document.createElement("label");
 
-
             const checkbox =
                 document.createElement("input");
-
 
             checkbox.type =
                 "checkbox";
 
-
             checkbox.className =
                 "question-checkbox";
-
 
             checkbox.dataset.question =
                 JSON.stringify(question);
 
+            checkbox.disabled =
+                !canSelect;
 
             checkbox.addEventListener(
                 "change",
                 updateSelectedCount
             );
 
-
             const content =
                 document.createElement("div");
-
 
             const meta =
                 document.createElement("div");
 
-
             meta.className =
                 "question-meta";
-
 
             meta.textContent =
                 `${question.year || ""} | ${question.marks || ""} Marks | ${question.word_limit || ""} Words`;
 
-
             const text =
                 document.createElement("div");
 
+            if (canSelect) {
 
-            text.textContent =
-                question.question_text || "";
+                text.textContent =
+                    question.question_text || "";
 
+            } else {
+
+                const fullText =
+                    question.question_text || "";
+
+                const words =
+                    fullText
+                        .trim()
+                        .split(/\s+/);
+
+                const preview =
+                    words
+                        .slice(0, 4)
+                        .join(" ");
+
+                text.textContent =
+                    preview +
+                    (words.length > 4 ? "…" : "");
+
+                text.className =
+                    "locked-preview";
+
+                const lockBadge =
+                    document.createElement("span");
+
+                lockBadge.className =
+                    "lock-badge";
+
+                lockBadge.textContent =
+                    " 🔒 ";
+
+                text.appendChild(
+                    lockBadge
+                );
+            }
 
             content.appendChild(meta);
 
             content.appendChild(text);
 
-
             label.appendChild(checkbox);
 
             label.appendChild(content);
 
-
             wrapper.appendChild(label);
-
 
             questionsList.appendChild(wrapper);
 
         }
     );
 
-
     questionsCard.style.display =
         "block";
 
     generateCard.style.display =
-        "block";
+    "block";
 
-    generateDescription.textContent =
-        "Generate a PDF containing the selected questions followed by answer-writing pages.";
-
+generateDescription.textContent =
+    "Generate a PDF containing the selected questions followed by answer-writing pages.";
 
     updateSelectedCount();
 
@@ -2316,7 +2382,7 @@ document
 
             document
                 .querySelectorAll(
-                    ".question-checkbox"
+                    ".question-checkbox:not(:disabled)"
                 )
                 .forEach(
                     function (checkbox) {

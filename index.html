@@ -452,30 +452,48 @@ button.danger:hover {
 }
 
 /* =========================
-   BACK TO MAIN PAGE
+   BACK TO LANDING PAGE
 ========================== */
 
 #backToMainContainer {
 
+    position: fixed;
+
+    bottom: 20px;
+
+    left: 0;
+
+    width: 100%;
+
     text-align: center;
 
-    margin: 0 auto 25px;
+    margin: 0;
+
+    z-index: 1000;
 
 }
 
 #backToMainButton {
 
-    background: #e5e7eb;
+    background: transparent;
 
-    color: #374151;
+    color: var(--primary);
 
     font-weight: 600;
+
+    padding: 6px 12px;
 
 }
 
 #backToMainButton:hover {
 
-    background: #d1d5db;
+    background: transparent;
+
+    color: var(--primary-dark);
+
+    text-decoration: underline;
+
+    transform: none;
 
 }
 
@@ -638,6 +656,10 @@ button.danger:hover {
 
 <h2>Anthropology QCAB</h2>
 
+<p id="loginInstruction" style="text-align:center; color:#6b7280; font-size:14px; margin:-12px 0 22px;">
+    Please create account to continue, login if already created.
+</p>
+
 <div id="loginForm">
 
     <label for="loginEmail">Email</label>
@@ -690,9 +712,9 @@ button.danger:hover {
     <button
         id="backToMainButton"
         type="button"
-        onclick="window.location.href='https://sankalpkgaidhani-art.github.io/main-page/';"
+        onclick="window.location.href='https://sankalpkgaidhani-art.github.io/anthro_landingpage/';"
     >
-        ← Back to Main Page
+        ← Back
     </button>
 
 </div>
@@ -797,7 +819,7 @@ button.danger:hover {
 
 <div class="container">
 
-    <h1>Anthropology QCAB Generator</h1>
+    <h1>Anthropology PYQs + QCAB Generator</h1>
 
     <p class="subtitle">
         Generate UPSC Anthropology Optional Question-Cum-Answer Booklets
@@ -1242,7 +1264,7 @@ function updatePlanMessage(accessLevel) {
     if (accessLevel === "free") {
 
         planMessage.textContent =
-            "Free Plan: You have access to 2026 questions only. Upgrade to premium for unlimited access.";
+            "Free Plan: You have access to 2026 questions only. Upgrade to premium for unlimited access. 🔓";
 
         planMessage.style.display = "block";
 
@@ -1251,7 +1273,7 @@ function updatePlanMessage(accessLevel) {
     } else if (accessLevel === "paid") {
 
         planMessage.textContent =
-            "Paid Plan:You have access to all available questions.";
+            "Paid Plan:You have access to all available questions. ✅";
 
         planMessage.style.display = "block";
 

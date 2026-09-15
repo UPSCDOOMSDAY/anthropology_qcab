@@ -1734,6 +1734,10 @@ window.supabaseClient.auth.onAuthStateChange(
 
     async function (event, session) {
 
+        if (event === "PASSWORD_RECOVERY") {
+            return;
+        }
+
         await updateAuthUI();
 
     }

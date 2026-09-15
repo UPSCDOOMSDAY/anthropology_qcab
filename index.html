@@ -755,6 +755,38 @@ button.danger:hover {
 
 </div>
 
+<div id="resetPasswordForm" class="hidden">
+
+    <h3 style="text-align:center;">Set New Password</h3>
+
+    <label for="newPassword">New Password</label>
+
+    <input
+        type="password"
+        id="newPassword"
+        placeholder="Enter your new password"
+        autocomplete="new-password"
+    >
+
+    <label for="confirmNewPassword">Confirm New Password</label>
+
+    <input
+        type="password"
+        id="confirmNewPassword"
+        placeholder="Confirm your new password"
+        autocomplete="new-password"
+    >
+
+    <button
+        id="updatePasswordButton"
+        type="button"
+        style="width: 100%;"
+    >
+        Update Password
+    </button>
+
+</div>
+
 <p id="loginMessage"></p>
 
 </div>
@@ -1691,6 +1723,104 @@ document
 
 
 /* =========================================
+   PASSWORD RECOVERY
+========================================= */
+
+const resetPasswordForm =
+    document.getElementById("resetPasswordForm");
+
+const updatePasswordButton =
+    document.getElementById("updatePasswordButton");
+
+updatePasswordButton.addEventListener(
+    "click",
+    async function () {
+
+        const newPassword =
+            document
+                .getElementById("newPassword")
+                .value;
+
+        const confirmNewPassword =
+            document
+                .getElementById("confirmNewPassword")
+                .value;
+
+        if (!newPassword || !confirmNewPassword) {
+
+            loginMessage.textContent =
+                "Please enter and confirm your new password.";
+
+            loginMessage.className = "";
+
+            return;
+        }
+
+        if (newPassword.length < 6) {
+
+            loginMessage.textContent =
+                "Password must be at least 6 characters.";
+
+            loginMessage.className = "";
+
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+
+            loginMessage.textContent =
+                "Passwords do not match.";
+
+            loginMessage.className = "";
+
+            return;
+        }
+
+        loginMessage.textContent =
+            "Updating password...";
+
+        loginMessage.className = "";
+
+        const {
+            error
+        } =
+            await window.supabaseClient.auth.updateUser({
+                password: newPassword
+            });
+
+        if (error) {
+
+            console.error(error);
+
+            loginMessage.textContent =
+                error.message;
+
+            return;
+        }
+
+        loginMessage.className =
+            "success-message";
+
+        loginMessage.textContent =
+            "Password updated successfully. You can now login.";
+
+        document
+            .getElementById("newPassword")
+            .value = "";
+
+        document
+            .getElementById("confirmNewPassword")
+            .value = "";
+
+        resetPasswordForm.classList.add("hidden");
+
+        loginForm.classList.remove("hidden");
+
+    }
+);
+
+
+/* =========================================
    LOGOUT
 ========================================= */
 
@@ -1732,6 +1862,25 @@ document
 window.supabaseClient.auth.onAuthStateChange(
 
     async function (event, session) {
+
+        if (event === "PASSWORD_RECOVERY") {
+
+            loginScreen.style.display = "block";
+
+            mainContent.style.display = "none";
+
+            logoutContainer.style.display = "none";
+
+            loginForm.classList.add("hidden");
+
+            signupForm.classList.add("hidden");
+
+            resetPasswordForm.classList.remove("hidden");
+
+            loginMessage.textContent = "";
+
+            return;
+        }
 
         await updateAuthUI();
 

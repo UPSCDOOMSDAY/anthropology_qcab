@@ -1,3 +1,4 @@
+
 document.getElementById("generateQCAB").addEventListener("click", async () => {
 
     // ==========================================
@@ -405,13 +406,18 @@ async function generateQCABPDF(questions) {
 
     const pageHeight = 297;
 
+    // ORIGINAL MARGINS — PAGE 1 UNCHANGED
     const leftMargin = 25;
-
     const rightMargin = 185;
-
     const topMargin = 15;
-
     const bottomMargin = 282;
+
+    // ANSWER PAGE MARGINS ONLY
+    const answerLeftMargin = 15;
+    const answerRightMargin = 195;
+    const answerTopMargin = 0;
+    const answerBottomMargin = 297;
+    const answerContentTop = 10; // Start answer-page content 1 cm lower
 
     doc.setFont(
         "Times",
@@ -422,11 +428,57 @@ async function generateQCABPDF(questions) {
 
 
     // ==========================================
-    // PART 1: QUESTION LISTING
+    // PART 1: QUESTION LISTING — ORIGINAL FORMAT
     // ==========================================
 
+    // DETAILS BOX ON THE FIRST PAGE ONLY
+    const detailsBoxX = leftMargin;
+    const detailsBoxY = topMargin;
+    const detailsBoxWidth = rightMargin - leftMargin;
+    const detailsBoxHeight = 50;
+
+    doc.setLineWidth(0.3);
+
+    doc.rect(
+        detailsBoxX,
+        detailsBoxY,
+        detailsBoxWidth,
+        detailsBoxHeight
+    );
+
+    doc.setFontSize(10);
+
+    // ROW 1: NAME
+    doc.text("Name:", 28, 21);
+    doc.line(42, 22, 182, 22);
+
+    // ROW 2: TOPIC
+    doc.text("Topic:", 28, 31);
+    doc.line(42, 32, 182, 32);
+
+    // ROW 3: NUMBER OF QUESTIONS + ESTIMATED TIME
+    doc.text("No of questions:", 28, 41);
+    doc.line(57, 42, 95, 42);
+
+    doc.text("Estimated time:", 105, 41);
+    doc.line(133, 42, 182, 42);
+
+    // ROW 4: START TIME + FINISH TIME
+    doc.text("Start Time:", 28, 51);
+    doc.line(49, 52, 95, 52);
+
+    doc.text("Finish Time:", 105, 51);
+    doc.line(129, 52, 182, 52);
+
+    // ROW 5: DATE
+    doc.text("Date:", 28, 61);
+    doc.line(39, 62, 95, 62);
+
+    doc.setFontSize(12);
+
+    // KEEP A 3.5 CM GAP BELOW THE BOX
     let currentY =
-        topMargin;
+        topMargin + detailsBoxHeight + 35;
 
     const localWidth =
         rightMargin -
@@ -612,7 +664,7 @@ async function generateQCABPDF(questions) {
 
 
     // ==========================================
-    // QUESTION LISTING FOOTER
+    // QUESTION LISTING FOOTER — UNCHANGED
     // ==========================================
 
     doc.setFontSize(9);
@@ -645,32 +697,21 @@ async function generateQCABPDF(questions) {
 
             doc.addPage();
 
+            // FULL-PAGE VERTICAL LINES
             doc.setLineWidth(0.3);
 
             doc.line(
-                leftMargin,
-                topMargin,
-                leftMargin,
-                bottomMargin
+                answerLeftMargin,
+                answerTopMargin,
+                answerLeftMargin,
+                answerBottomMargin
             );
 
             doc.line(
-                rightMargin,
-                topMargin,
-                rightMargin,
-                bottomMargin
-            );
-
-
-            const footerText =
-                `XXXX-${q.question_id || `CUSTOM_${q.question_number}`}`;
-
-            doc.setFontSize(8);
-
-            doc.text(
-                footerText,
-                leftMargin - 10,
-                bottomMargin + 3
+                answerRightMargin,
+                answerTopMargin,
+                answerRightMargin,
+                answerBottomMargin
             );
 
 
@@ -684,18 +725,18 @@ async function generateQCABPDF(questions) {
 
                 doc.text(
                     `Q. ${q.question_number}`,
-                    leftMargin - 15,
-                    topMargin + 5
+                    answerLeftMargin - 2,
+                    answerContentTop + 5,
+                    { align: "right" }
                 );
 
-
                 const localQuestionWidth =
-                    rightMargin -
-                    leftMargin -
+                    answerRightMargin -
+                    answerLeftMargin -
                     4;
 
                 let questionBottom =
-                    topMargin + 5;
+                    answerContentTop + 5;
 
 
                 if (hasRichQuestion(q)) {
@@ -709,14 +750,14 @@ async function generateQCABPDF(questions) {
                             addCanvasImage(
                                 doc,
                                 canvas,
-                                leftMargin + 2,
-                                topMargin,
+                                answerLeftMargin + 2,
+                                answerContentTop,
                                 localQuestionWidth,
                                 55
                             );
 
                         questionBottom =
-                            topMargin +
+                            answerContentTop +
                             14 +
                             image.height;
 
@@ -738,12 +779,12 @@ async function generateQCABPDF(questions) {
 
                         doc.text(
                             splitText,
-                            leftMargin + 2,
-                            topMargin + 5
+                            answerLeftMargin + 2,
+                            answerContentTop + 5
                         );
 
                         questionBottom =
-                            topMargin +
+                            answerContentTop +
                             5 +
                             splitText.length * 6;
                     }
@@ -760,49 +801,44 @@ async function generateQCABPDF(questions) {
 
                     doc.text(
                         splitText,
-                        leftMargin + 2,
-                        topMargin + 5
+                        answerLeftMargin + 2,
+                        answerContentTop + 5
                     );
 
                     questionBottom =
-                        topMargin +
+                        answerContentTop +
                         5 +
                         splitText.length * 6;
                 }
 
 
                 // ==========================================
-                // MARKS / YEAR
+                // MARKS / YEAR — OUTSIDE RIGHT LINE
                 // ==========================================
 
-                doc.setFontSize(12);
+                doc.setFontSize(8);
 
-                const metadata = [
+                if (q.marks != null) {
+                    doc.text(
+                        `${q.marks} M`,
+                        answerRightMargin + 2,
+                        answerContentTop + 5
+                    );
+                }
 
-                    q.marks != null
-                        ? `${q.marks} M`
-                        : "",
-
-                    q.year
-                        ? `${q.year}`
-                        : ""
-
-                ]
-                    .filter(Boolean)
-                    .join(" / ");
-
-
-                doc.text(
-                    metadata,
-                    rightMargin + 2,
-                    topMargin + 5
-                );
+                if (q.year) {
+                    doc.text(
+                        `${q.year}`,
+                        answerRightMargin + 2,
+                        answerContentTop + 10
+                    );
+                }
 
 
-                // Answer-writing area
+                // ANSWER-WRITING AREA
                 if (
                     questionBottom <
-                    bottomMargin - 4
+                    answerBottomMargin - 4
                 ) {
 
                     doc.setFontSize(8);
@@ -823,20 +859,19 @@ async function generateQCABPDF(questions) {
 
             } else {
 
-                const localWidth = 23;
-
-                const splitText =
-                    doc.splitTextToSize(
-                        "Candidates must not write on this margin",
-                        localWidth
-                    );
+                const splitText = [
+                    "Candidates",
+                    "must not",
+                    "write",
+                    "on margin"
+                ];
 
                 doc.setFontSize(8);
 
                 doc.text(
                     splitText,
-                    rightMargin + 2,
-                    topMargin + 5
+                    answerRightMargin + 2,
+                    answerContentTop + 5
                 );
             }
 

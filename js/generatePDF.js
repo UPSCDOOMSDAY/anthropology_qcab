@@ -1,4 +1,3 @@
-
 document.getElementById("generateQCAB").addEventListener("click", async () => {
 
     // ==========================================
@@ -67,6 +66,21 @@ document.getElementById("generateQCAB").addEventListener("click", async () => {
 
     if (selectedQuestions.length === 0) {
         alert("Select questions first!");
+        return;
+    }
+
+    // Every selected question without database-assigned marks
+    // must have an explicit 10M / 15M / 20M choice.
+    const questionMissingMarks = selectedQuestions.some(q =>
+        q.marks === null ||
+        q.marks === undefined ||
+        String(q.marks).trim() === "" ||
+        !Number.isFinite(Number(q.marks)) ||
+        Number(q.marks) <= 0
+    );
+
+    if (questionMissingMarks) {
+        alert("Please choose 10, 15, or 20 marks for every selected question that has no marks specified.");
         return;
     }
 
@@ -166,6 +180,8 @@ document.getElementById("generateQCAB").addEventListener("click", async () => {
 function getAnswerPages(q) {
 
     const marks = Number(q.marks) || 0;
+
+    if (marks === 10) return 2;
 
     if (marks === 15) return 3;
 
@@ -760,7 +776,6 @@ async function generateQCABPDF(questions) {
                             answerContentTop +
                             14 +
                             image.height;
-
 
                     } catch (error) {
 

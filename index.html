@@ -361,6 +361,48 @@ button.danger:hover {
 
 }
 
+
+/* MARKS SELECTION FOR QUESTIONS WITHOUT ASSIGNED MARKS */
+.marks-selector {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin: 10px 0 0 30px;
+}
+
+.marks-selector-label {
+    width: auto;
+    margin: 0 4px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mark-option {
+    min-width: 42px;
+    padding: 5px 10px;
+    border: 1px solid #c7d2fe;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.mark-option:hover {
+    background: #eef2ff;
+    transform: none;
+}
+
+.mark-option.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+}
+
 .selected-count {
 
     margin: 15px 0;
@@ -2609,8 +2651,15 @@ function displayQuestions(questions) {
             meta.className =
                 "question-meta";
 
+            const hasAssignedMarks =
+                question.marks !== null &&
+                question.marks !== undefined &&
+                String(question.marks).trim() !== "" &&
+                Number.isFinite(Number(question.marks)) &&
+                Number(question.marks) > 0;
+
             meta.textContent =
-                `${question.year || ""} | ${question.marks || ""} Marks | ${question.word_limit || ""} Words`;
+                `${question.year || ""} | ${hasAssignedMarks ? question.marks : "Not specified"} Marks | ${question.word_limit || ""} Words`;
 
             const text =
                 document.createElement("div");
@@ -2665,6 +2714,49 @@ function displayQuestions(questions) {
             label.appendChild(content);
 
             wrapper.appendChild(label);
+
+            // Show 10M / 15M / 20M choices only when the question
+            // does not already have marks assigned in the database.
+            if (canSelect && !hasAssignedMarks) {
+                const marksSelector = document.createElement("div");
+                marksSelector.className = "marks-selector";
+
+                const selectorLabel = document.createElement("span");
+                selectorLabel.className = "marks-selector-label";
+                selectorLabel.textContent = "Choose marks:";
+                marksSelector.appendChild(selectorLabel);
+
+                [10, 15, 20].forEach(function (marks) {
+                    const markButton = document.createElement("button");
+                    markButton.type = "button";
+                    markButton.className = "mark-option";
+                    markButton.textContent = marks;
+                    markButton.setAttribute("aria-label", `${marks} marks`);
+                    markButton.setAttribute("aria-pressed", "false");
+
+                    markButton.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        marksSelector
+                            .querySelectorAll(".mark-option")
+                            .forEach(function (option) {
+                                option.classList.remove("active");
+                                option.setAttribute("aria-pressed", "false");
+                            });
+
+                        markButton.classList.add("active");
+                        markButton.setAttribute("aria-pressed", "true");
+
+                        // Keep the chosen marks with this question's checkbox.
+                        checkbox.dataset.selectedMarks = String(marks);
+                    });
+
+                    marksSelector.appendChild(markButton);
+                });
+
+                wrapper.appendChild(marksSelector);
+            }
 
             questionsList.appendChild(wrapper);
 
@@ -2784,9 +2876,22 @@ window.getSelectedQuestions =
             .map(
                 function (checkbox) {
 
-                    return JSON.parse(
+                    const question = JSON.parse(
                         checkbox.dataset.question
                     );
+
+                    const hasAssignedMarks =
+                        question.marks !== null &&
+                        question.marks !== undefined &&
+                        String(question.marks).trim() !== "" &&
+                        Number.isFinite(Number(question.marks)) &&
+                        Number(question.marks) > 0;
+
+                    if (!hasAssignedMarks && checkbox.dataset.selectedMarks) {
+                        question.marks = Number(checkbox.dataset.selectedMarks);
+                    }
+
+                    return question;
 
                 }
             );
